@@ -189,7 +189,7 @@ class predict():
 test_graph = Graph(
     "http://localhost:7474",
     username="neo4j",
-    password="123"
+    password="root"
 )
 
 # 单元测试入口
