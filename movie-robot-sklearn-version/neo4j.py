@@ -1,8 +1,10 @@
 from py2neo import Graph
-from match import *
+
+from ModelProcess import NaiveBayesModel
+from match import match_question
 
 
-class predict():
+class Predict:
     def __init__(self, tg):
         # NoSQL数据库接口
         self.tg = tg
@@ -109,7 +111,7 @@ class predict():
 
     def actor_moive_total(self, query):
         query = query.split(" ")
-        result = self.tg.run("match(n:Person)-[:actedin]->(m:Movie) where n.name=$name return m.title",name=query[0]).to_data_frame()
+        result = self.tg.run("match(n:Person)-[:actedin]->(m:Movie) where n.name=$name return m.title", name=query[0]).to_data_frame()
         word = ""
         for i in range(len(result)):
             word += result.iat[i, 0] + ","
@@ -158,9 +160,11 @@ class predict():
     # todo
     def actor_a_b(self, query):
         query = query.split(" ")
-        result = self.tg.run("match(n:Person)-[:actedin]-(m:Movie) where n.name =$nname "
-                        "match(p:Person)-[:actedin]-(m) where p.name=$pname return distinct m.title"
-                        , nname=query[0], pname=query[1]).to_data_frame()
+        result = self.tg.run(
+            "match(n:Person)-[:actedin]-(m:Movie) where n.name =$nname "
+            "match(p:Person)-[:actedin]-(m) where p.name=$pname return distinct m.title",
+             nname=query[0], pname=query[1]
+        ).to_data_frame()
         word = ""
         for i in range(len(result)):
             word += result.iat[i, 0] + ","
@@ -185,20 +189,21 @@ class predict():
         else:
             return "抱歉，建议您自己百度"
 
-
-test_graph = Graph(
-    "http://localhost:7474",
-    username="neo4j",
-    password="root"
-)
-
 # 单元测试入口
-# if __name__ == "__main__":
-#     sentence = "周润发出演过的喜剧片有哪些"
-#     model = NaiveBayesModelMe(data_dir=data_dir, vocabularys=vocabularys)
-#     # model.fit()
-#     prediction = model.test(sentence)
-#     query = match_question(prediction, sentence)
-#
-#     predict = predict(test_graph, query, prediction)
-#     predict.run()
+if __name__ == "__main__":
+    test_graph = Graph(
+        "http://localhost:7474",
+        username="neo4j",
+        password="root",
+        name="moviechatbot"
+    )
+
+    sentence = "周润发出演过的喜剧片有哪些"
+    model = NaiveBayesModel()
+    # model.fit()
+    prediction = model.predict(sentence)
+    query = match_question(prediction, sentence)
+
+    predictor = Predict(test_graph)
+    result = predictor.run(query, prediction)
+    print(result)

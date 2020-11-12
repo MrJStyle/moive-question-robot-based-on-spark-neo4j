@@ -135,11 +135,11 @@ class NaiveBayesModel:
         with open("NaiveBayesModel.pkl", "wb") as f:
             pickle.dump(naive_bayes, f)
 
-    def predict(self, sentence, vocabularies):
+    def predict(self, sentence):
         # sentence = ' '.join(jieba.cut(sentence))
         sentence = sentence.split(" ")
         print('句子抽象化后的结果: {}'.format(sentence))
-        vector = [0 for x in range(len(vocabularies))]
+        vector = [0 for x in range(len(self.vocabularies))]
         for word in sentence:
             if word in vocabularies:
                 index = vocabularies.index(word)
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     model = NaiveBayesModel()
     # model.load(data_directory=data_dir, vocabularies=vocabularies)
     # model.fit()
-    model.predict(sentence, vocabulary)
+    model.predict(sentence)
 
     # end = time.time()
     # time = end - start
