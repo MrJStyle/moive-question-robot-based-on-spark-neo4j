@@ -1,4 +1,3 @@
-import re
 import os
 import pickle
 import time
@@ -54,7 +53,8 @@ class NaiveBayesModel:
 
     def __init__(self):
         self.vocabularies = []
-        self.model_path = "./nb_model"
+
+        self.load(data_dir, vocabularies)
 
     def load(self, data_directory, vocabularies):
         # 读取vocabularies文件，构建高频的词库
@@ -110,7 +110,7 @@ class NaiveBayesModel:
 
     def fit(self):
         naive_bayes: MultinomialNB = MultinomialNB(alpha=0.1)
-        k_fold = KFold(n_splits=5, shuffle=True)
+        k_fold = KFold(n_splits=10, shuffle=True)
 
         accuracy = []
         recall = []
@@ -132,7 +132,10 @@ class NaiveBayesModel:
         print(f"accuracy: {average_accuracy}\nrecall: {average_recall}\nf1-score: {average_f1}")
         self.model = naive_bayes
 
-    def test(self, sentence, vocabularies):
+        with open("NaiveBayesModel.pkl", "wb") as f:
+            pickle.dump(naive_bayes, f)
+
+    def predict(self, sentence, vocabularies):
         # sentence = ' '.join(jieba.cut(sentence))
         sentence = sentence.split(" ")
         print('句子抽象化后的结果: {}'.format(sentence))
@@ -143,25 +146,32 @@ class NaiveBayesModel:
                 vector[index] = 1
 
         vector = np.array(vector)[np.newaxis, :]
+
+        if os.path.exists("NaiveBayesModel.pkl"):
+            with open("NaiveBayesModel.pkl", "rb") as f:
+                self.model = pickle.load(f)
+
         pred = self.model.predict(vector)
 
+        print('The model index is: {}'.format(pred))
+        print('match question is: {}'.format(self.x[int(pred)]))
+        return int(pred)
 
-        print('The model index is: {}'.format(result.prediction))
-        return int(result.prediction)
 
+if __name__ == "__main__":
+    jieba.load_userdict(movie_dir)
+    pkl_file = open("vocabulary.pkl", "rb")
+    vocabulary = pickle.load(pkl_file)
+    sentence = '高圆圆演过什么电影?'
+    sentence = pre_possegment(sentence)
+    sentence = ' '.join(sentence)
 
-jieba.load_userdict(movie_dir)
-pkl_file = open("vocabulary.pkl", "rb")
-vocabulary = pickle.load(pkl_file)
-sentence = '不能说的秘密中参演的演员都有哪些'
-sentence = pre_possegment(sentence)
-sentence = ' '.join(sentence)
+    start = time.time()
+    model = NaiveBayesModel()
+    # model.load(data_directory=data_dir, vocabularies=vocabularies)
+    # model.fit()
+    model.predict(sentence, vocabulary)
 
-start = time.time()
-model = NaiveBayesModel()
-model.load(data_directory=data_dir, vocabularies=vocabularies)
-model.fit()
-model.test(sentence, vocabulary)
-# end = time.time()
-# time = end - start
-# print("测试时间为: {:.4f}".format(time))
+    # end = time.time()
+    # time = end - start
+    # print("测试时间为: {:.4f}".format(time))
